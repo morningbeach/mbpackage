@@ -1,24 +1,29 @@
 // app/products/[slug]/page.tsx
-type PageProps = {
-  params: Promise<{ slug: string }>;
-};
+import { notFound } from "next/navigation";
 
-export default async function ProductPage({ params }: PageProps) {
-  const { slug } = await params;
+type Params = Promise<{ slug: string }>;
 
-  // 直接呼叫同站 API（相對路徑 OK）
-  const res = await fetch(`/api/products/${slug}`, { cache: 'no-store' });
-  if (!res.ok) {
-    // 可自訂錯誤畫面或丟出 notFound()
-    return <main className="container">找不到商品</main>;
-  }
+export default async function ProductPage({
+  params,
+}: {
+  params: Params;
+}) {
+  const { slug } = await params; // Next 15：params 要 await
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${slug}`, {
+    // 保險起見：避免在建置時快取
+    cache: "no-store",
+  });
+
+  if (!res.ok) return notFound();
 
   const product = await res.json();
 
   return (
-    <main className="container">
+    <main className="container mx-auto p-6">
       <h1 className="text-xl font-bold">{product.name}</h1>
-      {/* 其他畫面 */}
+      <p className="mt-2 text-gray-600">{product.description}</p>
+      {/* 你自己的畫面… */}
     </main>
   );
 }
