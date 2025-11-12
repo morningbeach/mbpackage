@@ -1,3 +1,24 @@
+// app/products/[slug]/page.tsx
+import type { PageProps } from 'next'
+export const runtime = 'edge' // 可留可不留
+
+export default async function ProductPage(
+  { params }: PageProps<{ slug: string }>
+) {
+  const { slug } = await params; // ← 重點：await 取得 slug
+
+  // 你的資料抓取（用相對路徑在 CF Pages 上也可）
+  const res = await fetch(`/api/products/${slug}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to load product');
+  const product = await res.json();
+
+  return (
+    <main className="container">
+      <h1 className="text-xl font-bold">{product.name}</h1>
+      {/* 其他畫面 */}
+    </main>
+  );
+}
 export const runtime = 'edge'
 import { getRequestContext } from '@cloudflare/next-on-pages'
 
