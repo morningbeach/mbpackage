@@ -1,29 +1,19 @@
 // app/products/[slug]/page.tsx
-import { notFound } from "next/navigation";
+export const runtime = 'edge';
 
 type Params = Promise<{ slug: string }>;
 
-export default async function ProductPage({
+export default async function ProductDetailPage({
   params,
-}: {
-  params: Params;
-}) {
-  const { slug } = await params; // Next 15：params 要 await
-
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${slug}`, {
-    // 保險起見：避免在建置時快取
-    cache: "no-store",
-  });
-
-  if (!res.ok) return notFound();
-
-  const product = await res.json();
+}: { params: Params }) {
+  const { slug } = await params;
 
   return (
     <main className="container mx-auto p-6">
-      <h1 className="text-xl font-bold">{product.name}</h1>
-      <p className="mt-2 text-gray-600">{product.description}</p>
-      {/* 你自己的畫面… */}
+      <h1 className="text-xl font-bold">Product: {slug}</h1>
+      <p className="mt-2 text-sm text-gray-600">
+        前端頁面示意。實際資料請打 <code>/api/products/{slug}</code>（已接 D1）。
+      </p>
     </main>
   );
 }
