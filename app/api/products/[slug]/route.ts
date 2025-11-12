@@ -1,5 +1,5 @@
 export const runtime = 'edge'
-import { env } from 'cloudflare:env'
+import { getRequestContext } from '@cloudflare/next-on-pages'
 
 export async function GET(_: Request, { params }: { params: { slug: string } }){
   const row = await env.DB.prepare(`
