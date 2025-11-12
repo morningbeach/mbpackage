@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --hairline: 0.5px; }
+html, body { @apply bg-white text-neutral-900 antialiased; }
+.dark html, .dark body { @apply bg-neutral-950 text-neutral-100; }
+
+.border-hair { border-width: var(--hairline); }
+.masonry { column-gap: 1rem; }
+.masonry > * { break-inside: avoid; }
+.img-fade { opacity: 0; transition: opacity .4s ease; }
+.img-fade.loaded { opacity: 1; }
+.prose { @apply leading-relaxed; }
