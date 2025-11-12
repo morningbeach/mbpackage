@@ -19,6 +19,7 @@
     "clsx": "^2.1.1"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.0"
     "@types/node": "20.14.12",
     "@types/react": "18.3.6",
     "eslint": "^9.12.0",
