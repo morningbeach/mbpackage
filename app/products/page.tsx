@@ -1,20 +1,41 @@
-// app/products/page.tsx
+// app/api/products/route.ts
 export const runtime = 'edge';
 
-type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+// 在 Edge Runtime 下，Next 15 可用 cloudflare:env 取得綁定
+import { env } from 'cloudflare:env';
 
-export default async function ProductsPage({
-  searchParams,
-}: { searchParams: SearchParams }) {
-  const sp = await searchParams;
-  const q = (sp.q as string | undefined) ?? '';
+type Row = {
+  id: number;
+  slug: string;
+  name: string;
+  price: number | null;
+};
 
-  // 你可以把清單 Hydrate 成前端再打 /api 取資料，這裡先顯示查詢字串確認流程正常
-  return (
-    <main className="container mx-auto p-6">
-      <h1 className="text-xl font-bold">Products</h1>
-      <p className="mt-2 text-sm text-gray-600">query: <b>{q || '（空）'}</b></p>
-      <p className="mt-4">請前往 <code>/api/products</code> 驗證 D1 連線。</p>
-    </main>
-  );
+export async function GET() {
+  const db = env.DB as D1Database;
+
+  // 若尚未建表，先嘗試建立（幂等）
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      price REAL
+    );
+  `);
+
+  // demo 資料（幂等）
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO products (slug, name, price)
+       VALUES ('tote-bag', 'Tote Bag', 12.5),
+              ('gift-box', 'Gift Box', 25.0);`
+    )
+    .run();
+
+  const { results } = await db
+    .prepare(`SELECT id, slug, name, price FROM products ORDER BY id DESC`)
+    .all<Row>();
+
+  return Response.json({ ok: true, data: results ?? [] });
 }
