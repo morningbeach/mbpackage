@@ -1,7 +1,7 @@
 export const runtime = 'edge'
 import { getRequestContext } from '@cloudflare/next-on-pages'
 
-export async function GET(request: Request){
+export async function GET(request: Request) {
   const { env } = getRequestContext()
   const url = new URL(request.url)
   const category = url.searchParams.get('category') || undefined
@@ -23,13 +23,16 @@ export async function GET(request: Request){
   const rows = await env.DB.prepare(q).bind(category ?? null, material ?? null, finish ?? null).all()
 
   const out:any[] = []
-  for (const r of rows.results as any[]){
+  for (const r of (rows.results as any[]) || []) {
     const pid = r.id
-    const media     = await env.DB.prepare(`SELECT type, src, alt FROM product_media     WHERE product_id = ?1 ORDER BY idx ASC`).bind(pid).all()
-    const materials = await env.DB.prepare(`SELECT material       FROM product_materials WHERE product_id = ?1`).bind(pid).all()
-    const finishes  = await env.DB.prepare(`SELECT finish         FROM product_finishes  WHERE product_id = ?1`).bind(pid).all()
-    const details   = await env.DB.prepare(`SELECT detail         FROM product_details   WHERE product_id = ?1 ORDER BY idx ASC`).bind(pid).all()
-    const badges    = await env.DB.prepare(`SELECT badge          FROM product_badges    WHERE product_id = ?1 ORDER BY idx ASC`).bind(pid).all()
+    const [media, materials, finishes, details, badges] = await Promise.all([
+      env.DB.prepare(`SELECT type, src, alt FROM product_media WHERE product_id = ?1 ORDER BY idx ASC`).bind(pid).all(),
+      env.DB.prepare(`SELECT material FROM product_materials WHERE product_id = ?1`).bind(pid).all(),
+      env.DB.prepare(`SELECT finish FROM product_finishes  WHERE product_id = ?1`).bind(pid).all(),
+      env.DB.prepare(`SELECT detail FROM product_details   WHERE product_id = ?1 ORDER BY idx ASC`).bind(pid).all(),
+      env.DB.prepare(`SELECT badge  FROM product_badges    WHERE product_id = ?1 ORDER BY idx ASC`).bind(pid).all(),
+    ])
+
     out.push({
       id: r.id, slug: r.slug, title: r.title, summary: r.summary, category: r.category, cover: r.cover,
       media: media.results || [],
