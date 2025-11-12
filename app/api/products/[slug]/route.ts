@@ -1,17 +1,30 @@
 // app/api/products/[slug]/route.ts
-export async function GET(_req: Request, ctx: { params: { slug: string } }) {
-  const { slug } = ctx.params;
+import { NextResponse, NextRequest } from "next/server";
 
-  // 你原本抓資料的地方（示例）
-  const res = await fetch(`https://your-data-source.example.com/products/${slug}`, {
-    // 可視需求調整 cache
-    cache: 'no-store',
-  });
+type Params = Promise<{ slug: string }>;
 
-  if (!res.ok) {
-    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Params }
+) {
+  const { slug } = await params; // Next 15：params 要 await
+
+  // TODO: 這裡換成你實際的資料來源
+  // 例如讀 D1 / KV / 外部 API
+  const product = await getProductBySlug(slug);
+
+  if (!product) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const product = await res.json();
-  return Response.json(product);
+  return NextResponse.json(product, { status: 200 });
+}
+
+// 範例：請換成你的實作
+async function getProductBySlug(slug: string) {
+  // demo data
+  if (slug === "demo") {
+    return { slug, name: "Demo Product", description: "Just a demo." };
+  }
+  return null;
 }
